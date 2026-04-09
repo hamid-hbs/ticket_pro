@@ -32,7 +32,7 @@ class LoginController extends Controller
         $request->session()->regenerate();
 
         $user = Auth::user();
-        if (! $user->is_admin) {
+        if (! $user || (! $user->is_admin && ! $user->is_superadmin)) {
             Auth::logout();
 
             throw ValidationException::withMessages([

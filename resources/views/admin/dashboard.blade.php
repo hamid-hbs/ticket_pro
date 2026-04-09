@@ -6,7 +6,15 @@
         <div class="stat"><strong>{{ $total }}</strong><span>Total billets</span></div>
         <div class="stat"><strong>{{ $paid }}</strong><span>Payés</span></div>
         <div class="stat"><strong>{{ $used }}</strong><span>Utilisés</span></div>
-        <div class="stat"><strong>{{ $pending }}</strong><span>En attente</span></div>
+        @if(auth()->user()?->isSuperAdmin())
+            <div class="stat"><strong>{{ \App\Models\User::count() }}</strong><span>Utilisateurs</span></div>
+        @endif
     </div>
-    <p><a href="{{ route('admin.tickets') }}">Voir tous les tickets</a> · <a href="{{ route('admin.scan') }}">Scanner un billet</a></p>
+    <p>
+        <a href="{{ route('admin.tickets') }}">Voir tous les tickets</a>
+        · <a href="{{ route('admin.scan') }}">Scanner un billet</a>
+        @if(auth()->user()?->isSuperAdmin())
+            · <a href="{{ route('admin.users') }}">Gérer les utilisateurs</a>
+        @endif
+    </p>
 @endsection

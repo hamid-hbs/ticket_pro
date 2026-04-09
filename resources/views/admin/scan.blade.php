@@ -18,7 +18,17 @@
             @if (!empty($r['ticket']))
                 <div class="card" style="margin-bottom:1rem; font-size:0.9rem;">
                     <div>{{ $r['ticket']->name }} — {{ $r['ticket']->email }}</div>
-                    <div>Statut actuel : <strong>{{ $r['ticket']->status }}</strong></div>
+                    <div>
+                        Statut actuel : <strong>
+                            @if($r['ticket']->status === 'paid')
+                                Payé
+                            @elseif($r['ticket']->status === 'used')
+                                Utilisé
+                            @else
+                                Non payé
+                            @endif
+                        </strong>
+                    </div>
                 </div>
             @endif
         @endif

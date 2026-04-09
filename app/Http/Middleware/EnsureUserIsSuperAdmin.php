@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class EnsureUserIsAdmin
+class EnsureUserIsSuperAdmin
 {
     /**
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
@@ -15,8 +15,8 @@ class EnsureUserIsAdmin
     {
         $user = $request->user();
 
-        if (! $user || ! $user->isAdmin()) {
-            abort(Response::HTTP_FORBIDDEN, 'Accès réservé aux administrateurs.');
+        if (! $user || ! $user->isSuperAdmin()) {
+            abort(Response::HTTP_FORBIDDEN, 'Accès réservé au superadministrateur.');
         }
 
         return $next($request);

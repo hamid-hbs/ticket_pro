@@ -9,20 +9,24 @@ class AdminController extends Controller
 {
     public function dashboard()
     {
-        $total = Ticket::count();
-        $paid = Ticket::where('status', 'paid')->count();
-        $used = Ticket::where('status', 'used')->count();
-        $pending = Ticket::where('status', 'pending')->count();
+        $query = Ticket::whereIn('status', ['paid', 'used']);
 
-        return view('admin.dashboard', compact('total', 'paid', 'used', 'pending'));
+        $total = (clone $query)->count();
+        $paid = (clone $query)->where('status', 'paid')->count();
+        $used = (clone $query)->where('status', 'used')->count();
+
+        return view('admin.dashboard', compact('total', 'paid', 'used'));
     }
 
     public function tickets(Request $request)
     {
         $query = Ticket::with('event')->orderByDesc('created_at');
+        $allowedStatuses = ['paid', 'used'];
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->string('status'));
+        $query->whereIn('status', $allowedStatuses);
+
+        if ($request->filled('status') && in_array($request->string('status')->toString(), $allowedStatuses, true)) {
+            $query->where('status', $request->string('status')->toString());
         }
 
         if ($request->filled('q')) {

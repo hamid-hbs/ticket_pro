@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         Ticket::query()->delete();
         Event::query()->delete();
+        User::query()->whereIn('email', ['admin@example.com', 'superadmin@example.com'])->delete();
 
         Event::create([
             'title' => 'Concert Ticket Pro Live',
@@ -25,13 +26,19 @@ class DatabaseSeeder extends Seeder
             'location' => 'Dakar Arena',
         ]);
 
-        User::query()->where('email', 'admin@example.com')->delete();
-
         User::create([
             'name' => 'Administrateur',
             'email' => 'admin@example.com',
             'password' => Hash::make('password'),
             'is_admin' => true,
+        ]);
+
+        User::create([
+            'name' => 'Super administrateur',
+            'email' => 'superadmin@example.com',
+            'password' => Hash::make('password'),
+            'is_admin' => true,
+            'is_superadmin' => true,
         ]);
     }
 }
