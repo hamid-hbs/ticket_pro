@@ -1,59 +1,396 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Ticket Pro
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Application web Laravel de gestion de billetterie evenementielle, avec :
 
-## About Laravel
+- achat de billet par un visiteur,
+- paiement (callback Kkiapay + mode sandbox),
+- envoi email avec QR code + PDF,
+- back-office admin pour controle des tickets,
+- role superadmin avec gestion des utilisateurs et des tickets.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Ce document explique l'application de A a Z : architecture, installation, commandes, ordre d'execution, comptes, workflow complet, et procedures de maintenance.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 1) Stack technique
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- Backend : Laravel 12, PHP 8.2+
+- Frontend : Blade + Vite + Tailwind v4
+- Base de donnees : MySQL (configuration actuelle)
+- Queue/Cache/Session : drivers database
+- Mail : SMTP (exemple Gmail), avec piece jointe QR + PDF
+- Generation QR : endroid/qr-code
+- Generation PDF : barryvdh/laravel-dompdf
 
-## Learning Laravel
+Dependances principales (composer.json) :
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- laravel/framework
+- endroid/qr-code
+- simplesoftwareio/simple-qrcode
+- barryvdh/laravel-dompdf
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 2) Fonctionnalites metier
 
-## Laravel Sponsors
+### Cote client (public)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- Affiche l'evenement principal.
+- Permet d'acheter un billet (nom, email).
+- Redirige vers une page de paiement.
+- Gere le callback de paiement.
+- Affiche une page de succes.
 
-### Premium Partners
+### Cote admin
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- Dashboard statistiques (tickets payes/utilises).
+- Liste des tickets avec filtre (statut + recherche).
+- Detail ticket.
+- Suppression ticket.
+- Scanner QR pour valider l'entree.
 
-## Contributing
+### Cote superadmin
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- Tout ce qu'un admin peut faire.
+- Gestion utilisateurs (ajouter, modifier, supprimer).
+- Gestion tickets avancee (ajouter, modifier, supprimer).
 
-## Code of Conduct
+## 3) Gestion des roles et droits
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Deux colonnes de role en base :
 
-## Security Vulnerabilities
+- is_admin
+- is_superadmin
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Regles :
 
-## License
+- Un superadmin est aussi considere admin.
+- Routes admin : accessibles admin + superadmin.
+- Routes superadmin : accessibles uniquement superadmin.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Middleware utilises :
+
+- admin : verification admin/superadmin
+- superadmin : verification superadmin strict
+
+## 4) Etats du ticket
+
+Enum de la table tickets :
+
+- pending
+- paid
+- used
+
+Important :
+
+- Le statut pending existe toujours en base (ticket cree avant paiement).
+- Le back-office affiche et filtre principalement paid/used.
+
+## 5) Flux complet du billet
+
+### Etape 1 : creation du ticket
+
+- Route : POST /buy
+- Un ticket est cree avec un qr_code unique.
+- Le statut initial reste pending (par defaut DB).
+
+### Etape 2 : paiement
+
+- Route page paiement : GET /pay/{id}
+- Callback paiement : POST /callback
+- Si paiement SUCCESS, le statut passe a paid.
+
+### Etape 3 : envoi email
+
+Lors du passage a paid :
+
+- envoi d'un email de confirmation,
+- piece jointe QR PNG,
+- piece jointe PDF du billet,
+- email_sent_at rempli pour eviter un doublon.
+
+### Etape 4 : controle d'entree
+
+- Route scan : POST /admin/scan
+- Si ticket paid : passe a used + used_at renseigne.
+- Si ticket used : acces refuse (deja utilise).
+
+## 6) Routes principales
+
+### Public
+
+- GET /
+- POST /buy
+- GET /pay/{id}
+- POST /callback
+- GET /success/{id}
+- POST /sandbox/pay/{ticket}
+
+### Auth
+
+- GET /login
+- POST /login
+- POST /logout
+
+### Admin
+
+- GET /admin/dashboard
+- GET /admin/tickets
+- GET /admin/tickets/{ticket}
+- DELETE /admin/tickets/{ticket}
+- GET /admin/scan
+- POST /admin/scan
+
+### Superadmin
+
+- GET /admin/users
+- GET /admin/users/create
+- POST /admin/users
+- GET /admin/users/{user}/edit
+- PUT /admin/users/{user}
+- DELETE /admin/users/{user}
+- GET /admin/tickets/create
+- POST /admin/tickets
+- GET /admin/tickets/{ticket}/edit
+- PUT /admin/tickets/{ticket}
+
+## 7) Prerequis
+
+Avant de lancer le projet, verifier :
+
+- PHP 8.2+
+- Composer 2+
+- Node.js 20+ et npm
+- MySQL
+- Extension GD active (generation QR)
+
+## 8) Installation complete (ordre exact)
+
+Executer ces commandes dans cet ordre :
+
+### 8.1 Recuperer le projet
+
+```bash
+git clone <URL_DU_REPO>
+cd ticket-pro
+```
+
+### 8.2 Installer les dependances PHP
+
+```bash
+composer install
+```
+
+### 8.3 Installer les dependances front
+
+```bash
+npm install
+```
+
+### 8.4 Configurer le fichier environnement
+
+```bash
+copy .env.example .env
+```
+
+Adapter au minimum :
+
+- DB_CONNECTION
+- DB_HOST
+- DB_PORT
+- DB_DATABASE
+- DB_USERNAME
+- DB_PASSWORD
+
+Option paiement :
+
+- KKIAPAY_PUBLIC_KEY
+- KKIAPAY_SANDBOX=true en local
+
+Option email SMTP :
+
+- MAIL_MAILER
+- MAIL_HOST
+- MAIL_PORT
+- MAIL_USERNAME
+- MAIL_PASSWORD
+- MAIL_FROM_ADDRESS
+- MAIL_FROM_NAME
+
+### 8.5 Generer la cle applicative
+
+```bash
+php artisan key:generate
+```
+
+### 8.6 Migrer + seeder (obligatoire)
+
+```bash
+php artisan migrate --seed
+```
+
+Cette etape :
+
+- cree toutes les tables,
+- ajoute les colonnes de roles,
+- cree les comptes de base,
+- cree l'evenement de demo.
+
+### 8.7 Lancer en developpement
+
+Option simple (tout en parallele via script composer) :
+
+```bash
+composer run dev
+```
+
+Option manuelle (plus de controle) :
+
+Terminal 1
+
+```bash
+php artisan serve
+```
+
+Terminal 2
+
+```bash
+npm run dev
+```
+
+Terminal 3 (si jobs asynchrones utilises)
+
+```bash
+php artisan queue:listen --tries=1 --timeout=0
+```
+
+## 9) Comptes par defaut apres seed
+
+Mot de passe commun :
+
+- password
+
+Comptes :
+
+- admin@example.com (admin)
+- superadmin@example.com (superadmin)
+
+## 10) Commandes utiles au quotidien
+
+### Developpement
+
+```bash
+composer run dev
+```
+
+### Build front production
+
+```bash
+npm run build
+```
+
+### Tests
+
+```bash
+composer run test
+```
+
+### Reinitialiser la base en dev
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+### Voir les routes
+
+```bash
+php artisan route:list
+```
+
+## 11) Configuration paiements et email
+
+### Paiement Kkiapay
+
+Variables utilisees :
+
+- KKIAPAY_PUBLIC_KEY
+- KKIAPAY_SANDBOX
+
+Le callback backend est :
+
+- POST /callback
+
+### Email
+
+Le mail de confirmation est construit par TicketPurchasedMail.
+
+Pieces jointes envoyees :
+
+- qr-billet-{id}.png
+- billet-{id}.pdf
+
+Si l'email ne part pas :
+
+- verifier les variables SMTP,
+- verifier la connectivite sortante SMTP,
+- verifier les logs Laravel dans storage/logs.
+
+## 12) Structure du projet (vue rapide)
+
+- app/Http/Controllers/TicketController.php : parcours achat/paiement
+- app/Http/Controllers/AdminController.php : dashboard + tickets + scan
+- app/Http/Controllers/SuperAdminController.php : gestion users/tickets avancee
+- app/Http/Controllers/Auth/LoginController.php : auth admin/superadmin
+- app/Http/Middleware/EnsureUserIsAdmin.php
+- app/Http/Middleware/EnsureUserIsSuperAdmin.php
+- app/Mail/TicketPurchasedMail.php
+- app/Models/User.php
+- app/Models/Ticket.php
+- app/Models/Event.php
+- routes/web.php
+- database/migrations/*
+- database/seeders/DatabaseSeeder.php
+- resources/views/*
+
+## 13) Bonnes pratiques d'exploitation
+
+- Ne jamais committer le .env.
+- Changer les comptes seedes en environnement reel.
+- Mettre KKIAPAY_SANDBOX=false en production.
+- Utiliser une vraie configuration SMTP de production.
+- Faire des sauvegardes regulieres de la base.
+
+## 14) Troubleshooting
+
+### Erreur de connexion base
+
+- verifier les variables DB_* dans .env,
+- verifier que MySQL est demarre,
+- verifier que la base existe.
+
+### Erreur vue/Vite
+
+- relancer npm install,
+- relancer npm run dev,
+- ou rebuild via npm run build.
+
+### Role non pris en compte
+
+- verifier en base les colonnes is_admin et is_superadmin,
+- reexecuter php artisan migrate --seed si environnement local de test.
+
+### Callback paiement non recu
+
+- verifier URL du callback configuree chez le provider,
+- verifier logs Laravel,
+- tester en mode sandbox.
+
+## 15) Ordre de demarrage recommande (resume ultra-court)
+
+1. composer install
+2. npm install
+3. copy .env.example .env
+4. configurer .env
+5. php artisan key:generate
+6. php artisan migrate --seed
+7. composer run dev
+
+---
+
+Documentation maintenue pour l'application Ticket Pro. Mettre ce fichier a jour a chaque modification de routes, roles, flux de paiement ou schema de base.
