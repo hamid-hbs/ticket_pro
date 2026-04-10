@@ -5,7 +5,7 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
-        "start": "echo \"no start needed\""
+        "start": "echo \"Laravel running\""
 
     },
     "devDependencies": {
