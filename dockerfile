@@ -2,20 +2,26 @@ FROM dunglas/frankenphp:php8.2
 
 WORKDIR /app
 
-COPY . .
-
-# 🔥 Installer dépendances système + Composer
+# Installer Node + npm + dépendances système
 RUN apt-get update && apt-get install -y \
     git unzip zip curl \
     libpng-dev libjpeg-dev libfreetype6-dev \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd pdo pdo_mysql
 
-# 🔥 Installer Composer manuellement
+# Copier projet
+COPY . .
+
+# Installer Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 🔥 Installer dépendances Laravel
+# Backend deps
 RUN composer install --optimize-autoloader --no-interaction
+
+# Frontend deps (IMPORTANT)
+RUN npm install && npm run build
 
 RUN chmod -R 775 storage bootstrap/cache
 
