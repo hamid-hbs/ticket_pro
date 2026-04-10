@@ -38,4 +38,4 @@ RUN chmod -R 775 storage bootstrap/cache
 # =========================
 # Run server (IMPORTANT)
 # =========================
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD ["php", "artisan", "serve", "--host=mainline.proxy.rlwy.net", "--port=52471"]
