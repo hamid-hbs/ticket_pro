@@ -4,10 +4,12 @@ WORKDIR /app
 
 COPY . .
 
-# 🔥 IMPORTANT : ajouter gd ici
-RUN install-php-extensions gd pdo_mysql
-
-RUN curl -sS https://getcomposer.org/installer | php
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd pdo pdo_mysql
 
 RUN composer install --optimize-autoloader --no-interaction
 
