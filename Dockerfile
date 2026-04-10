@@ -1,41 +1,40 @@
-FROM dunglas/frankenphp:php8.2
+# Gunakan base image PHP 8.2 dengan ekstensi penting
+FROM php:8.2-fpm
 
-WORKDIR /app
-
-# =========================
-# System dependencies
-# =========================
+# Install dependencies system
 RUN apt-get update && apt-get install -y \
-    git unzip zip curl \
-    libpng-dev libjpeg-dev libfreetype6-dev \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_mysql
+    git \
+    curl \
+    zip \
+    unzip \
+    libpq-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    && docker-php-ext-install pdo pdo_pgsql mbstring zip exif pcntl
 
-# =========================
-# Copier projet
-# =========================
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Atur working directory
+WORKDIR /var/www
+
+# Copy semua file project ke dalam container
 COPY . .
 
-# =========================
-# Composer
-# =========================
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+EXPOSE 8000
 
-# =========================
-# NPM (IMPORTANT ORDER)
-# =========================
-RUN npm install
-RUN npm run build
+# Install dependency Laravel
+RUN composer install
 
-# =========================
-# Permissions Laravel
-# =========================
-RUN chmod -R 775 storage bootstrap/cache
+# Set permission folder storage dan bootstrap/cache
+RUN chown -R www-data:www-data /var/www \
+    && chmod -R 775 storage bootstrap/cache
 
-# =========================
-# Run server (IMPORTANT)
-# =========================
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# Jalankan artisan commands (opsional untuk production)
+# Jangan lupa override ini di Railway pakai start command sendiri
+CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000
+
