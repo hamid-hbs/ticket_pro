@@ -28,5 +28,3 @@ RUN chmod -R 775 storage bootstrap/cache
 # Exposer port (important pour Railway/Render)
 EXPOSE 8000
 
-# Lancer FrankenPHP (mieux que artisan serve)
-CMD ["php", "-S", "0.0.0.0:$PORT", "-t", "public"]
