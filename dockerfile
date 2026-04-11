@@ -18,6 +18,7 @@ pcntl \
 bcmath \
 gd \
 zip \
+sockets \
 && apt-get clean \
 && rm -rf /var/lib/apt/lists/*
 # ─── Étape 3 : activer mod_rewrite pour Laravel ──────────────────────────────
