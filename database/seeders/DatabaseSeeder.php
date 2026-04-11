@@ -20,10 +20,10 @@ class DatabaseSeeder extends Seeder
         User::query()->whereIn('email', ['admin@example.com', 'superadmin@example.com'])->delete();
 
         Event::create([
-            'title' => 'Concert Ticket Pro Live',
-            'price' => 5000,
+            'title' => 'IG PARTY 9.0',
+            'price' => 3500,
             'date' => now()->addMonth()->toDateString(),
-            'location' => 'Dakar Arena',
+            'location' => 'GLORY PALACE HÔTEL',
         ]);
 
         User::create([
