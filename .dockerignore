@@ -1,0 +1,17 @@
+.git
+.gitignore
+node_modules
+npm-debug.log
+vendor
+.env
+.env.*
+!.env.example
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+bootstrap/cache/*
+*.md
+Dockerfile
+docker-entrypoint.sh
+.dockerignore
