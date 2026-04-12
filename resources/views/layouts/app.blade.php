@@ -90,6 +90,15 @@
             box-shadow: none;
         }
         button.secondary:hover, .btn.secondary:hover { background: var(--surface-alt); }
+        button.warning, .btn.warning {
+            background: linear-gradient(180deg, #f59e0b, #d97706);
+            color: #fff;
+            box-shadow: 0 10px 20px rgba(217, 119, 6, 0.2);
+        }
+        button.warning:hover, .btn.warning:hover {
+            box-shadow: 0 12px 24px rgba(217, 119, 6, 0.24);
+            background: linear-gradient(180deg, #fbbf24, #f59e0b);
+        }
         button.danger, .btn.danger {
             background: linear-gradient(180deg, #ef4444, #dc2626);
             color: #fff;
@@ -167,6 +176,77 @@
         .muted { color: var(--muted); }
         .form-group { margin-bottom: 1rem; }
         .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+        .action-icon-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+        .action-icon-btn {
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            border-radius: 10px;
+            border: 1px solid rgba(15, 23, 42, 0.12);
+            background: #fff;
+            color: var(--text);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            box-shadow: none;
+            transition: transform 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
+        }
+        .action-icon-btn:hover {
+            transform: translateY(-1px);
+            text-decoration: none;
+            background: var(--surface-alt);
+            border-color: rgba(37, 99, 235, 0.35);
+            color: var(--accent-strong);
+        }
+        .action-icon-btn.info {
+            background: #e8f4ff;
+            border-color: #91cbff;
+            color: #0c63e7;
+        }
+        .action-icon-btn.info:hover {
+            background: #d7ebff;
+            border-color: #77bcff;
+            color: #084298;
+        }
+        .action-icon-btn.warning {
+            background: #fff4dd;
+            border-color: #ffd98a;
+            color: #a86400;
+        }
+        .action-icon-btn.warning:hover {
+            background: #ffedcc;
+            border-color: #ffc95a;
+            color: #7a4d00;
+        }
+        .action-icon-btn.danger {
+            background: #ffe1e3;
+            border-color: #ffb3b8;
+            color: #b02a37;
+        }
+        .action-icon-btn.danger:hover {
+            background: #ffd2d6;
+            border-color: #ff8c96;
+            color: #842029;
+        }
+        .action-icon-btn svg {
+            width: 17px;
+            height: 17px;
+        }
+        button.action-icon-btn.danger {
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            border-radius: 10px;
+            box-shadow: none;
+            background: #ffe1e3;
+            border-color: #ffb3b8;
+            color: #b02a37;
+        }
         .mt-large { margin-top: 3rem; }
         .mb-0 { margin-bottom: 0; }
         .flex-spacer { flex: 1; }

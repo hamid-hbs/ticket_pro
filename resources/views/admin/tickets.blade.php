@@ -60,10 +60,22 @@
                         </td>
                         <td>{{ $t->created_at?->format('d/m/Y H:i') }}</td>
                         <td>
-                            <a href="{{ route('admin.tickets.show', $t) }}">Détail</a>
-                            @if(auth()->user()?->isSuperAdmin())
-                                · <a href="{{ route('admin.tickets.edit', $t) }}">Modifier</a>
-                            @endif
+                            <div class="action-icon-group">
+                                <a href="{{ route('admin.tickets.show', $t) }}" class="action-icon-btn info" title="Détail" aria-label="Voir le détail">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </a>
+                                @if(auth()->user()?->isSuperAdmin())
+                                    <a href="{{ route('admin.tickets.edit', $t) }}" class="action-icon-btn warning" title="Modifier" aria-label="Modifier le ticket">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M12 20h9"></path>
+                                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                                        </svg>
+                                    </a>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                 @empty

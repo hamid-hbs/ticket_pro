@@ -36,7 +36,7 @@
 
     <div class="actions" style="margin-top:1rem;">
         @if(auth()->user()?->isSuperAdmin())
-            <a class="btn secondary" href="{{ route('admin.tickets.edit', $ticket) }}">Modifier</a>
+            <a class="btn warning" href="{{ route('admin.tickets.edit', $ticket) }}">Modifier</a>
             <form method="POST" action="{{ route('admin.tickets.destroy', $ticket) }}" onsubmit="return confirm('Supprimer ce ticket ?');" style="display:inline;">
                 @csrf
                 @method('DELETE')
