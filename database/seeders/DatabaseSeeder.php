@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-       Event::firstOrCreate(
+       Event::updateOrCreate(
     [
         'title' => 'IG PARTY 9.0'
     ],

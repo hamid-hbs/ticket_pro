@@ -16,8 +16,14 @@
         </div>
     @endif
 
+    @php
+        $eventDate = $event->date
+            ? (\Illuminate\Support\Carbon::parse($event->date)->translatedFormat('d F Y'))
+            : 'Date non définie';
+    @endphp
+
     <div class="card card--narrow">
-        <p class="page-note">Événement: <strong>{{ $event->title }}</strong><br>{{ \Illuminate\Support\Carbon::parse($event->date)->translatedFormat('d F Y') }}, {{ $event->location }} ({{ number_format($event->price, 0, ',', ' ') }} FCFA)</p>
+        <p class="page-note">Événement: <strong>{{ $event->title }}</strong><br>{{ $eventDate }}, {{ $event->location }} ({{ number_format($event->price, 0, ',', ' ') }} FCFA)</p>
 
         <form method="POST" action="{{ route('admin.sell.store') }}">
             @csrf

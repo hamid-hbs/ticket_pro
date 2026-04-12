@@ -3,9 +3,15 @@
 @section('title', 'Acheter un billet')
 
 @section('content')
+    @php
+        $eventDate = $event->date
+            ? (\Illuminate\Support\Carbon::parse($event->date)->translatedFormat('d F Y'))
+            : 'Date non définie';
+    @endphp
+
     <div class="card card--narrow">
         <h1>Acheter un billet</h1>
-        <p class="page-note">{{ $event->title }} — {{ \Illuminate\Support\Carbon::parse($event->date)->translatedFormat('d F Y') }}, {{ $event->location }} ({{ number_format($event->price, 0, ',', ' ') }} FCFA)</p>
+        <p class="page-note">{{ $event->title }} — {{ $eventDate }}, {{ $event->location }} ({{ number_format($event->price, 0, ',', ' ') }} FCFA)</p>
 
         @if ($errors->any())
             <div class="flash-err">
