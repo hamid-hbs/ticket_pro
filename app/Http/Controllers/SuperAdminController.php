@@ -16,9 +16,7 @@ class SuperAdminController extends Controller
 {
     public function users(Request $request)
     {
-        $query = User::query()
-            ->select(['id', 'name', 'email', 'is_admin', 'is_superadmin', 'created_at'])
-            ->orderBy('name');
+        $query = User::query()->orderBy('name');
 
         if ($request->filled('q')) {
             $search = '%'.$request->string('q')->toString().'%';
@@ -28,7 +26,7 @@ class SuperAdminController extends Controller
             });
         }
 
-        $users = $query->paginate(20)->onEachSide(2)->withQueryString();
+        $users = $query->paginate(20)->withQueryString();
 
         return view('admin.users', compact('users'));
     }

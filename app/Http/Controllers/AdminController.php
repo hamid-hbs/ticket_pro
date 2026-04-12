@@ -72,10 +72,7 @@ class AdminController extends Controller
 
     public function tickets(Request $request)
     {
-        $query = Ticket::query()
-            ->select(['id', 'name', 'email', 'event_id', 'sold_by_user_id', 'status', 'created_at', 'qr_code'])
-            ->with(['event:id,title', 'soldBy:id,name'])
-            ->orderByDesc('created_at');
+        $query = Ticket::with(['event', 'soldBy'])->orderByDesc('created_at');
         $allowedStatuses = ['paid', 'used'];
 
         $query->whereIn('status', $allowedStatuses);
@@ -93,7 +90,7 @@ class AdminController extends Controller
             });
         }
 
-        $tickets = $query->paginate(20)->onEachSide(2)->withQueryString();
+        $tickets = $query->paginate(20)->withQueryString();
 
         return view('admin.tickets', compact('tickets'));
     }
