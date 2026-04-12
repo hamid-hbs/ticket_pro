@@ -2,7 +2,7 @@
 
 @section('admin_content')
     <h1>Validation d’entrée</h1>
-    <p style="color:var(--muted); max-width:520px;">Saisissez le texte du QR code ou utilisez l’icône caméra pour prendre une image du code. Dans les deux cas, le billet valide et payé sera marqué comme utilisé.</p>
+    <p style="color:var(--muted); max-width:520px;">Saisissez le texte du QR code ou utilisez l’icône caméra pour lancer/arrêter le scan en direct. Le billet valide et payé sera marqué comme utilisé.</p>
 
     @if (session('scan_result'))
         @php $r = session('scan_result'); @endphp
@@ -40,7 +40,7 @@
             <label for="qr_code">Contenu du QR code</label>
             <div style="display:flex; gap:0.75rem; align-items:center;">
                 <input type="text" id="qr_code" name="qr_code" value="{{ old('qr_code') }}" required autofocus placeholder="Collez ou scannez ici" autocomplete="off" style="flex:1;">
-                <button type="button" id="camera-btn" aria-label="Choisir une photo" title="Scanner depuis une photo" style="width:48px; height:48px; display:inline-flex; align-items:center; justify-content:center; padding:0;">
+                <button type="button" id="camera-btn" aria-label="Démarrer le scan caméra" title="Démarrer le scan caméra" style="width:48px; height:48px; display:inline-flex; align-items:center; justify-content:center; padding:0;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                         <circle cx="12" cy="13" r="4"></circle>
@@ -48,10 +48,6 @@
                 </button>
             </div>
             <input type="file" id="qr_image" accept="image/*" capture="environment" hidden>
-            <div style="margin-top:0.85rem; display:flex; gap:0.6rem; flex-wrap:wrap;">
-                <button type="button" id="live-start" class="secondary">Scan caméra en direct</button>
-                <button type="button" id="live-stop" class="secondary" style="display:none;">Arrêter la caméra</button>
-            </div>
             <div id="live-wrap" style="display:none; margin-top:0.85rem; border:1px solid rgba(15, 23, 42, 0.1); border-radius:12px; overflow:hidden; background:#0f172a;">
                 <video id="live-video" playsinline muted style="display:block; width:100%; max-height:360px; object-fit:cover;"></video>
             </div>
@@ -72,8 +68,6 @@
         const qrCodeField = document.getElementById('qr_code');
         const qrStatus = document.getElementById('qr_status');
         const scanForm = document.getElementById('scan-form');
-        const liveStartButton = document.getElementById('live-start');
-        const liveStopButton = document.getElementById('live-stop');
         const liveWrap = document.getElementById('live-wrap');
         const liveVideo = document.getElementById('live-video');
 
@@ -85,6 +79,19 @@
 
         const setStatus = (message) => {
             qrStatus.textContent = message;
+        };
+
+        const setCameraButtonState = (running) => {
+            if (running) {
+                cameraButton.classList.add('danger');
+                cameraButton.setAttribute('aria-label', 'Arrêter le scan caméra');
+                cameraButton.setAttribute('title', 'Arrêter le scan caméra');
+                return;
+            }
+
+            cameraButton.classList.remove('danger');
+            cameraButton.setAttribute('aria-label', 'Démarrer le scan caméra');
+            cameraButton.setAttribute('title', 'Démarrer le scan caméra');
         };
 
         const stopLiveScan = () => {
@@ -102,8 +109,7 @@
 
             liveVideo.srcObject = null;
             liveWrap.style.display = 'none';
-            liveStartButton.style.display = 'inline-flex';
-            liveStopButton.style.display = 'none';
+            setCameraButtonState(false);
         };
 
         const submitDecodedValue = (value) => {
@@ -257,9 +263,8 @@
                 await liveVideo.play();
 
                 liveWrap.style.display = 'block';
-                liveStartButton.style.display = 'none';
-                liveStopButton.style.display = 'inline-flex';
                 liveScanRunning = true;
+                setCameraButtonState(true);
                 setStatus('Caméra active. Placez le QR au centre.');
                 detectFromLiveFrame();
             } catch (error) {
@@ -305,17 +310,14 @@
             reader.readAsDataURL(file);
         };
 
-        cameraButton.addEventListener('click', () => {
-            imageInput.click();
-        });
+        cameraButton.addEventListener('click', async () => {
+            if (liveScanRunning) {
+                stopLiveScan();
+                setStatus('Caméra arrêtée.');
+                return;
+            }
 
-        liveStartButton.addEventListener('click', async () => {
             await startLiveScan();
-        });
-
-        liveStopButton.addEventListener('click', () => {
-            stopLiveScan();
-            setStatus('Caméra arrêtée.');
         });
 
         imageInput.addEventListener('change', async () => {
