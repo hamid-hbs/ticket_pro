@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TicketPurchasedMail;
 use App\Models\Event;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -172,11 +174,16 @@ class SuperAdminController extends Controller
             unset($data['used_by_user_id']);
         }
 
-        Ticket::create($data);
+        $ticket = Ticket::create($data);
+
+        Mail::to($ticket->email)->send(new TicketPurchasedMail($ticket->fresh()));
+
+        $ticket->email_sent_at = now();
+        $ticket->save();
 
         return redirect()
             ->route('admin.tickets')
-            ->with('status', 'Ticket créé.');
+            ->with('status', 'Ticket créé et email envoyé.');
     }
 
     public function editTicket(Ticket $ticket)
