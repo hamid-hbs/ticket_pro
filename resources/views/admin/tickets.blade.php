@@ -37,6 +37,7 @@
                     <th>Nom</th>
                     <th>Email</th>
                     <th>Événement</th>
+                    <th>Vendu par</th>
                     <th>Statut</th>
                     <th>Créé</th>
                     <th></th>
@@ -49,6 +50,7 @@
                         <td>{{ $t->name }}</td>
                         <td>{{ $t->email }}</td>
                         <td>{{ $t->event?->title ?? '—' }}</td>
+                        <td>{{ $t->soldBy?->name ?? '—' }}</td>
                         <td>
                             @if ($t->status === 'paid')
                                 <span class="badge badge-paid">Payé</span>
@@ -65,7 +67,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="7">Aucun ticket.</td></tr>
+                    <tr><td colspan="8">Aucun ticket.</td></tr>
                 @endforelse
             </tbody>
         </table>

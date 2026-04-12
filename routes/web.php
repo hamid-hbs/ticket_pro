@@ -6,7 +6,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\SuperAdminController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [TicketController::class, 'index']);
+Route::redirect('/', '/login');
 Route::post('/buy', [TicketController::class, 'buy']);
 Route::get('/pay/{id}', [TicketController::class, 'pay']);
 Route::post('/callback', [TicketController::class, 'callback'])->name('payment.callback');
@@ -20,6 +20,10 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
 
+Route::middleware('auth')->get('/dashboard', function () {
+    return redirect()->route('admin.dashboard');
+})->name('dashboard');
+
 Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/users', [SuperAdminController::class, 'users'])->name('users');
     Route::get('/users/create', [SuperAdminController::class, 'createUser'])->name('users.create');
@@ -32,13 +36,15 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
     Route::post('/tickets', [SuperAdminController::class, 'storeTicket'])->name('tickets.store');
     Route::get('/tickets/{ticket}/edit', [SuperAdminController::class, 'editTicket'])->name('tickets.edit');
     Route::put('/tickets/{ticket}', [SuperAdminController::class, 'updateTicket'])->name('tickets.update');
+    Route::delete('/tickets/{ticket}', [AdminController::class, 'destroyTicket'])->name('tickets.destroy');
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/sell', [AdminController::class, 'sellForm'])->name('sell');
+    Route::post('/sell', [AdminController::class, 'sellStore'])->name('sell.store');
     Route::get('/tickets', [AdminController::class, 'tickets'])->name('tickets');
     Route::get('/tickets/{ticket}', [AdminController::class, 'showTicket'])->name('tickets.show');
-    Route::delete('/tickets/{ticket}', [AdminController::class, 'destroyTicket'])->name('tickets.destroy');
     Route::get('/scan', [AdminController::class, 'scanForm'])->name('scan');
     Route::post('/scan', [AdminController::class, 'scan'])->name('scan.process');
 });

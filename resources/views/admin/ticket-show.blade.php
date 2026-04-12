@@ -8,6 +8,7 @@
             <tr><td>Nom</td><td>{{ $ticket->name }}</td></tr>
             <tr><td>Email</td><td>{{ $ticket->email }}</td></tr>
             <tr><td>Événement</td><td>{{ $ticket->event?->title ?? '—' }}</td></tr>
+            <tr><td>Vendu par</td><td>{{ $ticket->soldBy?->name ?? '—' }}</td></tr>
             <tr>
                 <td>Statut</td>
                 <td>
@@ -23,6 +24,12 @@
             <tr><td>QR (secret)</td><td style="font-family:monospace; font-size:0.75rem; word-break:break-all;">{{ $ticket->qr_code }}</td></tr>
             <tr><td>Réf. paiement</td><td>{{ $ticket->payment_reference ?? '—' }}</td></tr>
             <tr><td>Utilisé le</td><td>{{ $ticket->used_at?->format('d/m/Y H:i:s') ?? '—' }}</td></tr>
+            @if($ticket->status === 'used')
+                <tr>
+                    <td>Scanné par</td>
+                    <td>{{ $ticket->scannedBy?->name ?? '—' }}</td>
+                </tr>
+            @endif
             <tr><td>Email envoyé</td><td>{{ $ticket->email_sent_at?->format('d/m/Y H:i:s') ?? '—' }}</td></tr>
         </table>
     </div>
@@ -30,11 +37,11 @@
     <div class="actions" style="margin-top:1rem;">
         @if(auth()->user()?->isSuperAdmin())
             <a class="btn secondary" href="{{ route('admin.tickets.edit', $ticket) }}">Modifier</a>
+            <form method="POST" action="{{ route('admin.tickets.destroy', $ticket) }}" onsubmit="return confirm('Supprimer ce ticket ?');" style="display:inline;">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="danger">Supprimer</button>
+            </form>
         @endif
-        <form method="POST" action="{{ route('admin.tickets.destroy', $ticket) }}" onsubmit="return confirm('Supprimer ce ticket ?');">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="danger">Supprimer</button>
-        </form>
     </div>
 @endsection

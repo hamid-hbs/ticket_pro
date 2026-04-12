@@ -11,7 +11,8 @@
         @endif
     </div>
     <p>
-        <a href="{{ route('admin.tickets') }}">Voir tous les tickets</a>
+        <a href="{{ route('admin.sell') }}">Vendre un billet</a>
+        · <a href="{{ route('admin.tickets') }}">Voir tous les tickets</a>
         · <a href="{{ route('admin.scan') }}">Scanner un billet</a>
         @if(auth()->user()?->isSuperAdmin())
             · <a href="{{ route('admin.users') }}">Gérer les utilisateurs</a>

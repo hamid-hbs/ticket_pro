@@ -6,9 +6,9 @@
     <title>Billet confirmé</title>
 </head>
 <body style="font-family: system-ui, sans-serif; line-height: 1.5; color: #1a1a1a; max-width: 560px; margin: 0 auto; padding: 24px;">
-    <h1 style="font-size: 1.25rem;">Merci pour votre achat</h1>
+    <h1 style="font-size: 1.25rem;">Votre billet est prêt</h1>
     <p>Bonjour <strong>{{ $ticket->name }}</strong>,</p>
-    <p>Votre paiement est confirmé. Voici le récapitulatif :</p>
+    <p>Votre billet a été émis. Voici le récapitulatif :</p>
     <ul style="padding-left: 1.25rem;">
         <li><strong>Email :</strong> {{ $ticket->email }}</li>
         @if($ticket->event)

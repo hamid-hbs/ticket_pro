@@ -22,7 +22,7 @@
                 <input id="name" type="text" name="name" value="{{ old('name') }}" required>
             </div>
             <div class="form-group">
-                <label for="email">Email</label>
+                <label for="email">Email <span style="font-size:0.85rem; color:#666;">(doit être réel, ex: Gmail)</span></label>
                 <input id="email" type="email" name="email" value="{{ old('email') }}" required>
             </div>
             <input type="hidden" name="event_id" value="{{ $event->id }}">

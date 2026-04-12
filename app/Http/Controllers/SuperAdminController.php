@@ -7,6 +7,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -165,6 +166,12 @@ class SuperAdminController extends Controller
 
         $data['used_at'] = $data['status'] === 'used' ? now() : null;
 
+        if (Schema::hasColumn('tickets', 'used_by_user_id')) {
+            $data['used_by_user_id'] = $data['status'] === 'used' ? $request->user()?->id : null;
+        } else {
+            unset($data['used_by_user_id']);
+        }
+
         Ticket::create($data);
 
         return redirect()
@@ -189,6 +196,12 @@ class SuperAdminController extends Controller
     {
         $data = $this->validateTicket($request, $ticket);
         $data['used_at'] = $data['status'] === 'used' ? ($ticket->used_at ?? now()) : null;
+
+        if (Schema::hasColumn('tickets', 'used_by_user_id')) {
+            $data['used_by_user_id'] = $data['status'] === 'used' ? ($ticket->used_by_user_id ?? $request->user()?->id) : null;
+        } else {
+            unset($data['used_by_user_id']);
+        }
 
         $ticket->update($data);
 
@@ -224,19 +237,24 @@ class SuperAdminController extends Controller
 
     private function validateTicket(Request $request, ?Ticket $ticket = null): array
     {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255'],
-            'event_id' => ['required', 'integer', 'exists:events,id'],
-            'status' => ['required', Rule::in(['paid', 'used'])],
-            'qr_code' => [
-                'required',
-                'string',
-                'max:512',
-                Rule::unique('tickets', 'qr_code')->ignore($ticket?->id),
+        $data = $request->validate(
+            [
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'email:rfc,dns', 'max:255'],
+                'event_id' => ['required', 'integer', 'exists:events,id'],
+                'status' => ['required', Rule::in(['paid', 'used'])],
+                'qr_code' => [
+                    'required',
+                    'string',
+                    'max:512',
+                    Rule::unique('tickets', 'qr_code')->ignore($ticket?->id),
+                ],
+                'payment_reference' => ['nullable', 'string', 'max:255'],
             ],
-            'payment_reference' => ['nullable', 'string', 'max:255'],
-        ]);
+            [
+                'email.email' => 'L\'adresse email doit être valide (le domaine email doit exister).',
+            ]
+        );
 
         if (empty($data['payment_reference'])) {
             unset($data['payment_reference']);

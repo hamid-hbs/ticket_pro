@@ -24,11 +24,16 @@ class TicketController extends Controller
 
     public function buy(Request $request)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255'],
-            'event_id' => ['required', 'integer', 'exists:events,id'],
-        ]);
+        $validated = $request->validate(
+            [
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'email:rfc,dns', 'max:255'],
+                'event_id' => ['required', 'integer', 'exists:events,id'],
+            ],
+            [
+                'email.email' => 'L\'adresse email doit être valide (le domaine email doit exister).',
+            ]
+        );
 
         $ticket = Ticket::create([
             'name' => $validated['name'],

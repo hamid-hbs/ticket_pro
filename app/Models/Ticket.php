@@ -14,6 +14,8 @@ class Ticket extends Model
         'payment_reference',
         'status',
         'used_at',
+        'sold_by_user_id',
+        'used_by_user_id',
         'email_sent_at',
     ];
 
@@ -28,5 +30,15 @@ class Ticket extends Model
     public function event()
     {
         return $this->belongsTo(Event::class);
+    }
+
+    public function soldBy()
+    {
+        return $this->belongsTo(User::class, 'sold_by_user_id');
+    }
+
+    public function scannedBy()
+    {
+        return $this->belongsTo(User::class, 'used_by_user_id');
     }
 }

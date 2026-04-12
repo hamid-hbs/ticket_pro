@@ -5,6 +5,7 @@
 @section('content')
     <nav>
         <a href="{{ route('admin.dashboard') }}">Tableau de bord</a>
+        <a href="{{ route('admin.sell') }}">Vendre</a>
         <a href="{{ route('admin.tickets') }}">Tickets</a>
         @if(auth()->user()?->isSuperAdmin())
             <a href="{{ route('admin.users') }}">Utilisateurs</a>

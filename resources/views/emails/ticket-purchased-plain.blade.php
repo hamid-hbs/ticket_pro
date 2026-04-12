@@ -1,8 +1,8 @@
-Merci pour votre achat
+Votre billet est prêt
 
 Bonjour {{ $ticket->name }},
 
-Votre paiement est confirmé.
+Votre billet a été émis.
 
 @if($ticket->event)
 Événement : {{ $ticket->event->title }}
