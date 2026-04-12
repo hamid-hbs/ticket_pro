@@ -14,8 +14,13 @@
 <body>
     <h1>Billet d’accès</h1>
     @if($ticket->event)
+        @php
+            $eventDate = $ticket->event?->date
+                ? \Illuminate\Support\Carbon::parse($ticket->event->date)->format('d/m/Y')
+                : 'Date non définie';
+        @endphp
         <p><strong>{{ $ticket->event->title }}</strong></p>
-        <p>{{ \Illuminate\Support\Carbon::parse($ticket->event->date)->format('d/m/Y') }} — {{ $ticket->event->location }}</p>
+        <p>{{ $eventDate }} — {{ $ticket->event->location }}</p>
     @endif
     <table>
         <tr><td>Nom</td><td>{{ $ticket->name }}</td></tr>
