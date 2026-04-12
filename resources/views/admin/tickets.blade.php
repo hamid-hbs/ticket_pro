@@ -73,5 +73,5 @@
         </table>
     </div>
 
-    <div style="margin-top:1rem;">{{ $tickets->links() }}</div>
+    <div class="pagination-wrap">{{ $tickets->links() }}</div>
 @endsection

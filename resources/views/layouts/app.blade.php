@@ -189,6 +189,71 @@
             border-radius: 16px;
         }
         .summary strong { color: var(--text); }
+        .pagination-wrap {
+            margin-top: 1.25rem;
+            display: flex;
+            justify-content: center;
+        }
+        .pagination-wrap nav[role="navigation"] {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.45rem;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        }
+        .pagination-wrap nav[role="navigation"] > div {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .pagination-wrap nav[role="navigation"] a,
+        .pagination-wrap nav[role="navigation"] span[aria-disabled="true"],
+        .pagination-wrap nav[role="navigation"] span[aria-current="page"] {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 2.45rem;
+            height: 2.45rem;
+            padding: 0 0.8rem;
+            border-radius: 999px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+        .pagination-wrap nav[role="navigation"] a {
+            color: var(--text);
+            background: #fff;
+            border: 1px solid rgba(15, 23, 42, 0.1);
+        }
+        .pagination-wrap nav[role="navigation"] a:hover {
+            background: rgba(37, 99, 235, 0.08);
+            border-color: rgba(37, 99, 235, 0.2);
+            transform: translateY(-1px);
+            text-decoration: none;
+        }
+        .pagination-wrap nav[role="navigation"] span[aria-disabled="true"] {
+            color: rgba(100, 116, 139, 0.7);
+            background: rgba(248, 250, 252, 0.8);
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            cursor: not-allowed;
+        }
+        .pagination-wrap nav[role="navigation"] span[aria-current="page"] {
+            color: #fff;
+            background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+            border: 1px solid transparent;
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
+        }
+        .pagination-wrap nav[role="navigation"] svg {
+            width: 1rem;
+            height: 1rem;
+        }
+        .pagination-wrap nav[role="navigation"] .hidden {
+            display: none;
+        }
     </style>
     @stack('head')
 </head>

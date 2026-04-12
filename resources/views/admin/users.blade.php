@@ -66,5 +66,5 @@
         </table>
     </div>
 
-    <div style="margin-top:1rem;">{{ $users->links() }}</div>
+    <div class="pagination-wrap">{{ $users->links() }}</div>
 @endsection
