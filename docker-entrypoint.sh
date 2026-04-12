@@ -28,6 +28,7 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 php artisan migrate --force
+php artisan db:seed --force
 
 echo ">>> Démarrage Apache sur port ${PORT:-80}"
 exec apache2-foreground
