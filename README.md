@@ -1,396 +1,263 @@
 # Ticket Pro
 
-Application web Laravel de gestion de billetterie evenementielle, avec :
+Application Laravel de billetterie evenementielle avec back-office admin/superadmin, vente manuelle, scan QR, paiement callback, envoi d'email (QR + PDF), et suivi des actions (vendeur/scanneur).
 
-- achat de billet par un visiteur,
-- paiement (callback Kkiapay + mode sandbox),
-- envoi email avec QR code + PDF,
-- back-office admin pour controle des tickets,
-- role superadmin avec gestion des utilisateurs et des tickets.
+## 1) Stack
 
-Ce document explique l'application de A a Z : architecture, installation, commandes, ordre d'execution, comptes, workflow complet, et procedures de maintenance.
+- Backend: Laravel 12, PHP 8.2+
+- Frontend: Blade + Vite
+- DB: MySQL
+- Mail: SMTP
+- QR: `endroid/qr-code` (PNG) + `simplesoftwareio/simple-qrcode` (PDF)
+- PDF: `barryvdh/laravel-dompdf`
 
-## 1) Stack technique
+## 2) Fonctionnalites actuelles
 
-- Backend : Laravel 12, PHP 8.2+
-- Frontend : Blade + Vite + Tailwind v4
-- Base de donnees : MySQL (configuration actuelle)
-- Queue/Cache/Session : drivers database
-- Mail : SMTP (exemple Gmail), avec piece jointe QR + PDF
-- Generation QR : endroid/qr-code
-- Generation PDF : barryvdh/laravel-dompdf
+### Public / Paiement
 
-Dependances principales (composer.json) :
-
-- laravel/framework
-- endroid/qr-code
-- simplesoftwareio/simple-qrcode
-- barryvdh/laravel-dompdf
-
-## 2) Fonctionnalites metier
-
-### Cote client (public)
-
-- Affiche l'evenement principal.
-- Permet d'acheter un billet (nom, email).
-- Redirige vers une page de paiement.
-- Gere le callback de paiement.
-- Affiche une page de succes.
-
-### Cote admin
-
-- Dashboard statistiques (tickets payes/utilises).
-- Liste des tickets avec filtre (statut + recherche).
-- Detail ticket.
-- Suppression ticket.
-- Scanner QR pour valider l'entree.
-
-### Cote superadmin
-
-- Tout ce qu'un admin peut faire.
-- Gestion utilisateurs (ajouter, modifier, supprimer).
-- Gestion tickets avancee (ajouter, modifier, supprimer).
-
-## 3) Gestion des roles et droits
-
-Deux colonnes de role en base :
-
-- is_admin
-- is_superadmin
-
-Regles :
-
-- Un superadmin est aussi considere admin.
-- Routes admin : accessibles admin + superadmin.
-- Routes superadmin : accessibles uniquement superadmin.
-
-Middleware utilises :
-
-- admin : verification admin/superadmin
-- superadmin : verification superadmin strict
-
-## 4) Etats du ticket
-
-Enum de la table tickets :
-
-- pending
-- paid
-- used
-
-Important :
-
-- Le statut pending existe toujours en base (ticket cree avant paiement).
-- Le back-office affiche et filtre principalement paid/used.
-
-## 5) Flux complet du billet
-
-### Etape 1 : creation du ticket
-
-- Route : POST /buy
-- Un ticket est cree avec un qr_code unique.
-- Le statut initial reste pending (par defaut DB).
-
-### Etape 2 : paiement
-
-- Route page paiement : GET /pay/{id}
-- Callback paiement : POST /callback
-- Si paiement SUCCESS, le statut passe a paid.
-
-### Etape 3 : envoi email
-
-Lors du passage a paid :
-
-- envoi d'un email de confirmation,
-- piece jointe QR PNG,
-- piece jointe PDF du billet,
-- email_sent_at rempli pour eviter un doublon.
-
-### Etape 4 : controle d'entree
-
-- Route scan : POST /admin/scan
-- Si ticket paid : passe a used + used_at renseigne.
-- Si ticket used : acces refuse (deja utilise).
-
-## 6) Routes principales
-
-### Public
-
-- GET /
-- POST /buy
-- GET /pay/{id}
-- POST /callback
-- GET /success/{id}
-- POST /sandbox/pay/{ticket}
-
-### Auth
-
-- GET /login
-- POST /login
-- POST /logout
+- `/` redirige vers `/login`.
+- Les routes de paiement existent toujours:
+	- `POST /buy`
+	- `GET /pay/{id}`
+	- `POST /callback`
+	- `GET /success/{id}`
+	- `POST /sandbox/pay/{ticket}`
 
 ### Admin
 
-- GET /admin/dashboard
-- GET /admin/tickets
-- GET /admin/tickets/{ticket}
-- DELETE /admin/tickets/{ticket}
-- GET /admin/scan
-- POST /admin/scan
+- Dashboard (tickets payes/utilises)
+- Vente manuelle de ticket depuis `GET /admin/sell`
+- Creation ticket `paid` + envoi email automatique (QR + PDF)
+- Liste tickets avec recherche et filtre statut
+- Detail ticket
+- Scan QR pour valider l'entree (mode texte + image + camera live)
 
 ### Superadmin
 
-- GET /admin/users
-- GET /admin/users/create
-- POST /admin/users
-- GET /admin/users/{user}/edit
-- PUT /admin/users/{user}
-- DELETE /admin/users/{user}
-- GET /admin/tickets/create
-- POST /admin/tickets
-- GET /admin/tickets/{ticket}/edit
-- PUT /admin/tickets/{ticket}
+- Tout ce qu'un admin peut faire
+- Gestion utilisateurs complete (create/edit/delete)
+- Gestion tickets avancee (create/edit)
+- Suppression de ticket (superadmin uniquement)
 
-## 7) Prerequis
+## 3) Roles et permissions
 
-Avant de lancer le projet, verifier :
+Colonnes utilisateurs:
 
-- PHP 8.2+
-- Composer 2+
-- Node.js 20+ et npm
-- MySQL
-- Extension GD active (generation QR)
+- `is_admin`
+- `is_superadmin`
 
-## 8) Installation complete (ordre exact)
+Regles:
 
-Executer ces commandes dans cet ordre :
+- Un superadmin est aussi admin.
+- Routes `admin` accessibles admin + superadmin.
+- Routes `superadmin` accessibles superadmin uniquement.
+- Suppression ticket reservee au superadmin (route + controle serveur).
 
-### 8.1 Recuperer le projet
+## 4) Statuts ticket
+
+- `pending`
+- `paid`
+- `used`
+
+Le back-office travaille principalement avec `paid` et `used`.
+
+## 5) Nouvelles donnees de tracking
+
+La table `tickets` utilise aussi:
+
+- `sold_by_user_id`: utilisateur ayant vendu le ticket
+- `used_by_user_id`: utilisateur ayant scanne le ticket
+- `email_sent_at`: date d'envoi du mail
+
+Affichage:
+
+- Colonne `Vendu par` dans la liste tickets
+- Champ `Scanne par` visible dans le detail ticket quand le ticket est `used`
+
+## 6) Validation email
+
+Creation/vente de ticket:
+
+- Regle: `email:rfc,dns`
+- Objectif: verifier format email + domaine valide
+
+## 7) Scan QR (admin)
+
+Page `GET /admin/scan`:
+
+- Saisie manuelle du code
+- Scan depuis image
+- Scan camera en direct (mobile/desktop compatible navigateur)
+
+Comportement:
+
+- Ticket inconnu: refuse
+- Ticket deja utilise: refuse
+- Ticket non paye: refuse
+- Ticket `paid`: passe a `used`, renseigne `used_at` et `used_by_user_id`
+
+## 8) Emails envoyes
+
+Classe: `app/Mail/TicketPurchasedMail.php`
+
+Contenu:
+
+- Email HTML responsive
+- Version texte plain
+- Piece jointe PNG du QR (`qr-billet-{id}.png`)
+- Piece jointe PDF (`billet-{id}.pdf`)
+
+Points importants:
+
+- Le QR est responsive et centre dans son cadre en HTML email
+- La date affichee dans email/PDF est la date de l'event (jamais date du jour par defaut)
+
+## 9) Routes principales
+
+### Auth
+
+- `GET /login`
+- `POST /login`
+- `POST /logout`
+- `GET /dashboard` (redirige vers dashboard admin)
+
+### Admin (`auth + admin`)
+
+- `GET /admin/dashboard`
+- `GET /admin/sell`
+- `POST /admin/sell`
+- `GET /admin/tickets`
+- `GET /admin/tickets/{ticket}`
+- `GET /admin/scan`
+- `POST /admin/scan`
+
+### Superadmin (`auth + superadmin`)
+
+- `GET /admin/users`
+- `GET /admin/users/create`
+- `POST /admin/users`
+- `GET /admin/users/{user}/edit`
+- `PUT /admin/users/{user}`
+- `DELETE /admin/users/{user}`
+- `GET /admin/tickets/create`
+- `POST /admin/tickets`
+- `GET /admin/tickets/{ticket}/edit`
+- `PUT /admin/tickets/{ticket}`
+- `DELETE /admin/tickets/{ticket}`
+
+## 10) Installation
 
 ```bash
 git clone <URL_DU_REPO>
 cd ticket-pro
-```
-
-### 8.2 Installer les dependances PHP
-
-```bash
 composer install
-```
-
-### 8.3 Installer les dependances front
-
-```bash
 npm install
-```
-
-### 8.4 Configurer le fichier environnement
-
-```bash
 copy .env.example .env
-```
-
-Adapter au minimum :
-
-- DB_CONNECTION
-- DB_HOST
-- DB_PORT
-- DB_DATABASE
-- DB_USERNAME
-- DB_PASSWORD
-
-Option paiement :
-
-- KKIAPAY_PUBLIC_KEY
-- KKIAPAY_SANDBOX=true en local
-
-Option email SMTP :
-
-- MAIL_MAILER
-- MAIL_HOST
-- MAIL_PORT
-- MAIL_USERNAME
-- MAIL_PASSWORD
-- MAIL_FROM_ADDRESS
-- MAIL_FROM_NAME
-
-### 8.5 Generer la cle applicative
-
-```bash
 php artisan key:generate
-```
-
-### 8.6 Migrer + seeder (obligatoire)
-
-```bash
 php artisan migrate --seed
 ```
 
-Cette etape :
-
-- cree toutes les tables,
-- ajoute les colonnes de roles,
-- cree les comptes de base,
-- cree l'evenement de demo.
-
-### 8.7 Lancer en developpement
-
-Option simple (tout en parallele via script composer) :
+Lancer en dev:
 
 ```bash
 composer run dev
 ```
 
-Option manuelle (plus de controle) :
+Ou manuellement:
 
-Terminal 1
+Terminal 1:
 
 ```bash
 php artisan serve
 ```
 
-Terminal 2
+Terminal 2:
 
 ```bash
 npm run dev
 ```
 
-Terminal 3 (si jobs asynchrones utilises)
+## 11) Variables .env essentielles
+
+DB:
+
+- `DB_CONNECTION`
+- `DB_HOST`
+- `DB_PORT`
+- `DB_DATABASE`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+
+Paiement:
+
+- `KKIAPAY_PUBLIC_KEY`
+- `KKIAPAY_SANDBOX`
+
+Email:
+
+- `MAIL_MAILER`
+- `MAIL_HOST`
+- `MAIL_PORT`
+- `MAIL_USERNAME`
+- `MAIL_PASSWORD`
+- `MAIL_FROM_ADDRESS`
+- `MAIL_FROM_NAME`
+
+## 12) Comptes seed par defaut
+
+Mot de passe commun:
+
+- `password`
+
+Comptes:
+
+- `admin@example.com`
+- `superadmin@example.com`
+
+## 13) Commandes utiles
 
 ```bash
-php artisan queue:listen --tries=1 --timeout=0
-```
-
-## 9) Comptes par defaut apres seed
-
-Mot de passe commun :
-
-- password
-
-Comptes :
-
-- admin@example.com (admin)
-- superadmin@example.com (superadmin)
-
-## 10) Commandes utiles au quotidien
-
-### Developpement
-
-```bash
-composer run dev
-```
-
-### Build front production
-
-```bash
-npm run build
-```
-
-### Tests
-
-```bash
+# tests
 composer run test
-```
 
-### Reinitialiser la base en dev
+# build front
+npm run build
 
-```bash
+# reset db local
 php artisan migrate:fresh --seed
-```
 
-### Voir les routes
-
-```bash
+# voir les routes
 php artisan route:list
 ```
 
-## 11) Configuration paiements et email
+## 14) UI recente
 
-### Paiement Kkiapay
+- Boutons d'action icones dans les listes tickets/utilisateurs
+- Codes couleur type Bootstrap:
+	- detail: info
+	- modifier: warning
+	- supprimer: danger
+- Bouton `Modifier` en warning aussi dans le detail ticket
 
-Variables utilisees :
+## 15) Troubleshooting
 
-- KKIAPAY_PUBLIC_KEY
-- KKIAPAY_SANDBOX
+### L'email ne part pas
 
-Le callback backend est :
+- Verifier config SMTP dans `.env`
+- Verifier logs `storage/logs`
+- Verifier connectivite SMTP sortante
 
-- POST /callback
+### Le scan camera ne demarre pas
 
-### Email
+- Utiliser HTTPS (ou localhost)
+- Autoriser la permission camera navigateur
+- Tester avec un QR net et bien cadre
 
-Le mail de confirmation est construit par TicketPurchasedMail.
+### Les roles ne s'appliquent pas
 
-Pieces jointes envoyees :
-
-- qr-billet-{id}.png
-- billet-{id}.pdf
-
-Si l'email ne part pas :
-
-- verifier les variables SMTP,
-- verifier la connectivite sortante SMTP,
-- verifier les logs Laravel dans storage/logs.
-
-## 12) Structure du projet (vue rapide)
-
-- app/Http/Controllers/TicketController.php : parcours achat/paiement
-- app/Http/Controllers/AdminController.php : dashboard + tickets + scan
-- app/Http/Controllers/SuperAdminController.php : gestion users/tickets avancee
-- app/Http/Controllers/Auth/LoginController.php : auth admin/superadmin
-- app/Http/Middleware/EnsureUserIsAdmin.php
-- app/Http/Middleware/EnsureUserIsSuperAdmin.php
-- app/Mail/TicketPurchasedMail.php
-- app/Models/User.php
-- app/Models/Ticket.php
-- app/Models/Event.php
-- routes/web.php
-- database/migrations/*
-- database/seeders/DatabaseSeeder.php
-- resources/views/*
-
-## 13) Bonnes pratiques d'exploitation
-
-- Ne jamais committer le .env.
-- Changer les comptes seedes en environnement reel.
-- Mettre KKIAPAY_SANDBOX=false en production.
-- Utiliser une vraie configuration SMTP de production.
-- Faire des sauvegardes regulieres de la base.
-
-## 14) Troubleshooting
-
-### Erreur de connexion base
-
-- verifier les variables DB_* dans .env,
-- verifier que MySQL est demarre,
-- verifier que la base existe.
-
-### Erreur vue/Vite
-
-- relancer npm install,
-- relancer npm run dev,
-- ou rebuild via npm run build.
-
-### Role non pris en compte
-
-- verifier en base les colonnes is_admin et is_superadmin,
-- reexecuter php artisan migrate --seed si environnement local de test.
-
-### Callback paiement non recu
-
-- verifier URL du callback configuree chez le provider,
-- verifier logs Laravel,
-- tester en mode sandbox.
-
-## 15) Ordre de demarrage recommande (resume ultra-court)
-
-1. composer install
-2. npm install
-3. copy .env.example .env
-4. configurer .env
-5. php artisan key:generate
-6. php artisan migrate --seed
-7. composer run dev
+- Verifier `is_admin` et `is_superadmin` en base
+- Verifier middleware sur les routes
 
 ---
 
-Documentation maintenue pour l'application Ticket Pro. Mettre ce fichier a jour a chaque modification de routes, roles, flux de paiement ou schema de base.
+Mettre ce README a jour a chaque changement de routes, permissions, schema tickets, ou workflow email/scan.
