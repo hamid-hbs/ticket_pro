@@ -30,11 +30,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 419);
             }
 
-            $fallback = route('login');
-            $previousUrl = url()->previous();
-
             return redirect()
-                ->to($previousUrl ?: $fallback)
+                ->route('login')
                 ->with('status', 'Votre session a expiré. Veuillez réessayer.');
         });
     })->create();
