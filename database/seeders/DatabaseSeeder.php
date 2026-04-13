@@ -15,17 +15,7 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-       Event::updateOrCreate(
-    [
-        'title' => 'IG PARTY 9.0'
-    ],
-    [
-        'price' => 3500,
-        'date' => '2026-05-30',
-        'location' => 'GLORY PALACE HÔTEL',
-    ]
-);
-
+     
         $users = [
     ['name' => 'Hamid SuperAdmin', 'email' => 'hamid@superadmin.com', 'is_superadmin' => true],
     ['name' => 'Hamid', 'email' => 'hamid@admin.com'],

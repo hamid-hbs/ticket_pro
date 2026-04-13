@@ -8,6 +8,7 @@
         <div class="stat"><strong>{{ $used }}</strong><span>Utilisés</span></div>
         @if(auth()->user()?->isSuperAdmin())
             <div class="stat"><strong>{{ \App\Models\User::count() }}</strong><span>Utilisateurs</span></div>
+            <div class="stat"><strong>{{ \App\Models\Event::count() }}</strong><span>Événements</span></div>
         @endif
     </div>
     <p>
@@ -15,6 +16,7 @@
         · <a href="{{ route('admin.tickets') }}">Voir tous les tickets</a>
         · <a href="{{ route('admin.scan') }}">Scanner un billet</a>
         @if(auth()->user()?->isSuperAdmin())
+            · <a href="{{ route('admin.events') }}">Gérer les événements</a>
             · <a href="{{ route('admin.users') }}">Gérer les utilisateurs</a>
         @endif
     </p>

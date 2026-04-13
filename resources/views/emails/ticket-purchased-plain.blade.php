@@ -11,9 +11,13 @@ Récapitulatif :
 	$eventDate = $ticket->event?->date
 		? \Illuminate\Support\Carbon::parse($ticket->event->date)->translatedFormat('d F Y')
 		: 'Date non définie';
+	$eventStartTime = $ticket->event?->start_time
+		? \Illuminate\Support\Carbon::parse($ticket->event->start_time)->format('H:i')
+		: 'Heure non définie';
 @endphp
 Événement : {{ $ticket->event->title }}
 Date : {{ $eventDate }}
+Heure de début : {{ $eventStartTime }}
 Lieu : {{ $ticket->event->location }}
 
 @endif

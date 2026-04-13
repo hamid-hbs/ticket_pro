@@ -18,9 +18,12 @@
             $eventDate = $ticket->event?->date
                 ? \Illuminate\Support\Carbon::parse($ticket->event->date)->format('d/m/Y')
                 : 'Date non définie';
+            $eventStartTime = $ticket->event?->start_time
+                ? \Illuminate\Support\Carbon::parse($ticket->event->start_time)->format('H:i')
+                : 'Heure non définie';
         @endphp
         <p><strong>{{ $ticket->event->title }}</strong></p>
-        <p>{{ $eventDate }} — {{ $ticket->event->location }}</p>
+        <p>{{ $eventDate }} à {{ $eventStartTime }} — {{ $ticket->event->location }}</p>
     @endif
     <table>
         <tr><td>Nom</td><td>{{ $ticket->name }}</td></tr>

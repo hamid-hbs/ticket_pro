@@ -52,6 +52,9 @@
         $eventDate = $ticket->event?->date
             ? \Illuminate\Support\Carbon::parse($ticket->event->date)->translatedFormat('d F Y')
             : 'Date non définie';
+        $eventStartTime = $ticket->event?->start_time
+            ? \Illuminate\Support\Carbon::parse($ticket->event->start_time)->format('H:i')
+            : 'Heure non définie';
     @endphp
     <div class="email-shell" style="max-width: 640px; margin: 0 auto; padding: 26px 16px 36px;">
         <div class="hero-block" style="background: linear-gradient(135deg, #1F6F5C 0%, #0F3F35 100%); color: #F2F2F2; border-radius: 22px; padding: 26px 24px; box-shadow: 0 18px 40px rgba(15, 63, 53, 0.22); border: 1px solid rgba(242, 242, 242, 0.15);">
@@ -76,6 +79,10 @@
                     <tr>
                         <td style="padding: 8px 0; color: #1F6F5C; font-weight: 700;">Date</td>
                         <td style="padding: 8px 0; font-weight: 600; color: #0F3F35;">{{ $eventDate }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: #1F6F5C; font-weight: 700;">Heure de début</td>
+                        <td style="padding: 8px 0; font-weight: 600; color: #0F3F35;">{{ $eventStartTime }}</td>
                     </tr>
                     <tr>
                         <td style="padding: 8px 0; color: #1F6F5C; font-weight: 700;">Lieu</td>

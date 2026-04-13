@@ -13,13 +13,13 @@ class TicketController extends Controller
 {
     public function index()
     {
-        $event = Event::first();
+        $events = Event::query()->orderBy('date')->orderBy('start_time')->orderBy('title')->get();
 
-        if (! $event) {
+        if ($events->isEmpty()) {
             return response('Aucun événement configuré. Exécutez les seeders ou créez un événement en base.', 500);
         }
 
-        return view('buy', compact('event'));
+        return view('buy', compact('events'));
     }
 
     public function buy(Request $request)

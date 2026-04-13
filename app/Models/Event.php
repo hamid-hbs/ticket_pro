@@ -10,6 +10,7 @@ class Event extends Model
         'title',
         'price',
         'date',
+        'start_time',
         'location',
     ];
 

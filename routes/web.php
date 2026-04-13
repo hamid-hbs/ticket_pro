@@ -25,6 +25,13 @@ Route::middleware('auth')->get('/dashboard', function () {
 })->name('dashboard');
 
 Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/events', [SuperAdminController::class, 'events'])->name('events');
+    Route::get('/events/create', [SuperAdminController::class, 'createEvent'])->name('events.create');
+    Route::post('/events', [SuperAdminController::class, 'storeEvent'])->name('events.store');
+    Route::get('/events/{event}/edit', [SuperAdminController::class, 'editEvent'])->name('events.edit');
+    Route::put('/events/{event}', [SuperAdminController::class, 'updateEvent'])->name('events.update');
+    Route::delete('/events/{event}', [SuperAdminController::class, 'destroyEvent'])->name('events.destroy');
+
     Route::get('/users', [SuperAdminController::class, 'users'])->name('users');
     Route::get('/users/create', [SuperAdminController::class, 'createUser'])->name('users.create');
     Route::post('/users', [SuperAdminController::class, 'storeUser'])->name('users.store');

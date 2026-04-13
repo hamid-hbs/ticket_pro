@@ -34,8 +34,16 @@
                 <select id="event_id" name="event_id" required>
                     <option value="">Choisir un événement</option>
                     @foreach ($events as $event)
+                        @php
+                            $eventDate = $event->date
+                                ? (\Illuminate\Support\Carbon::parse($event->date)->translatedFormat('d F Y'))
+                                : 'Date non définie';
+                            $eventStartTime = $event->start_time
+                                ? (\Illuminate\Support\Carbon::parse($event->start_time)->format('H:i'))
+                                : 'Heure non définie';
+                        @endphp
                         <option value="{{ $event->id }}" @selected((string) old('event_id', $ticket->event_id) === (string) $event->id)>
-                            {{ $event->title }}
+                            {{ $event->title }} — {{ $eventDate }} à {{ $eventStartTime }}
                         </option>
                     @endforeach
                 </select>

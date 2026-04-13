@@ -25,13 +25,13 @@ class AdminController extends Controller
 
     public function sellForm()
     {
-        $event = Event::query()->orderBy('date')->first();
+        $events = Event::query()->orderBy('date')->orderBy('start_time')->orderBy('title')->get();
 
-        if (! $event) {
+        if ($events->isEmpty()) {
             return response('Aucun événement configuré. Exécutez les seeders ou créez un événement en base.', 500);
         }
 
-        return view('admin.sell', compact('event'));
+        return view('admin.sell', compact('events'));
     }
 
     public function sellStore(Request $request)

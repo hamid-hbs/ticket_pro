@@ -16,6 +16,76 @@ use Illuminate\Validation\ValidationException;
 
 class SuperAdminController extends Controller
 {
+    public function events(Request $request)
+    {
+        $query = Event::query()->orderBy('date')->orderBy('start_time')->orderBy('title');
+
+        if ($request->filled('q')) {
+            $search = '%'.$request->string('q')->toString().'%';
+            $query->where(function ($sub) use ($search) {
+                $sub->where('title', 'like', $search)
+                    ->orWhere('location', 'like', $search);
+            });
+        }
+
+        $events = $query->paginate(20)->withQueryString();
+
+        return view('admin.events', compact('events'));
+    }
+
+    public function createEvent()
+    {
+        $event = new Event();
+
+        return view('admin.event-form', [
+            'event' => $event,
+            'action' => route('admin.events.store'),
+            'method' => 'POST',
+            'buttonLabel' => 'Créer l\'événement',
+        ]);
+    }
+
+    public function storeEvent(Request $request)
+    {
+        $data = $this->validateEvent($request);
+
+        Event::create($data);
+
+        return redirect()
+            ->route('admin.events')
+            ->with('status', 'Événement créé.');
+    }
+
+    public function editEvent(Event $event)
+    {
+        return view('admin.event-form', [
+            'event' => $event,
+            'action' => route('admin.events.update', $event),
+            'method' => 'PUT',
+            'buttonLabel' => 'Enregistrer les modifications',
+        ]);
+    }
+
+    public function updateEvent(Request $request, Event $event)
+    {
+        $data = $this->validateEvent($request, $event);
+
+        $event->update($data);
+
+        return redirect()
+            ->route('admin.events')
+            ->with('status', 'Événement modifié.');
+    }
+
+    public function destroyEvent(Event $event)
+    {
+        $event->delete();
+
+        return redirect()
+            ->route('admin.events')
+            ->with('status', 'Événement supprimé.');
+    }
+
     public function users(Request $request)
     {
         $query = User::query()->orderBy('name');
@@ -238,6 +308,19 @@ class SuperAdminController extends Controller
         } else {
             unset($data['password']);
         }
+
+        return $data;
+    }
+
+    private function validateEvent(Request $request, ?Event $event = null): array
+    {
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'price' => ['required', 'integer', 'min:0'],
+            'date' => ['required', 'date'],
+            'start_time' => ['required', 'date_format:H:i'],
+            'location' => ['required', 'string', 'max:255'],
+        ]);
 
         return $data;
     }
