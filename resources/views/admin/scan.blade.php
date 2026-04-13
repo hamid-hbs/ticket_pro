@@ -70,6 +70,8 @@
         const scanForm = document.getElementById('scan-form');
         const liveWrap = document.getElementById('live-wrap');
         const liveVideo = document.getElementById('live-video');
+        const isMobileDevice = /Android|iPhone|iPad|iPod|Windows Phone|Mobile/i.test(navigator.userAgent)
+            || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
 
         let liveStream = null;
         let liveScanRunning = false;
@@ -82,6 +84,13 @@
         };
 
         const setCameraButtonState = (running) => {
+            if (!isMobileDevice) {
+                cameraButton.classList.remove('danger');
+                cameraButton.setAttribute('aria-label', 'Importer une image du QR');
+                cameraButton.setAttribute('title', 'Importer une image du QR');
+                return;
+            }
+
             if (running) {
                 cameraButton.classList.add('danger');
                 cameraButton.setAttribute('aria-label', 'Arrêter le scan caméra');
@@ -311,6 +320,12 @@
         };
 
         cameraButton.addEventListener('click', async () => {
+            if (!isMobileDevice) {
+                stopLiveScan();
+                imageInput.click();
+                return;
+            }
+
             if (liveScanRunning) {
                 stopLiveScan();
                 setStatus('Caméra arrêtée.');
@@ -334,5 +349,7 @@
         window.addEventListener('beforeunload', () => {
             stopLiveScan();
         });
+
+        setCameraButtonState(false);
     </script>
 @endsection
