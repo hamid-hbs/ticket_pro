@@ -70,6 +70,10 @@
                 <label for="email">Email <span style="font-size:0.85rem; color:#666;">(doit être réel, ex: Gmail)</span></label>
                 <input id="email" type="email" name="email" value="{{ old('email') }}" required>
             </div>
+            <div class="form-group">
+                <label for="email_confirmation">Confirmer l'email</label>
+                <input id="email_confirmation" type="email" name="email_confirmation" value="{{ old('email_confirmation') }}" required>
+            </div>
             <button type="submit">Vendre et envoyer le billet</button>
         </form>
     </div>

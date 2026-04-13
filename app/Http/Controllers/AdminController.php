@@ -39,11 +39,12 @@ class AdminController extends Controller
         $validated = $request->validate(
             [
                 'name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'email:rfc,dns', 'max:255'],
+                'email' => ['required', 'email:rfc,dns', 'max:255', 'confirmed'],
                 'event_id' => ['required', 'integer', 'exists:events,id'],
             ],
             [
                 'email.email' => 'L\'adresse email doit être valide (le domaine email doit exister).',
+                'email.confirmed' => 'Les deux emails ne sont pas identiques. Veuillez réessayer.',
             ]
         );
 
