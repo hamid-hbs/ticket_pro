@@ -35,9 +35,9 @@ return [
         ],
     ],
 
-    'kkiapay' => [
-        'public_key' => env('KKIAPAY_PUBLIC_KEY'),
-        'sandbox' => env('KKIAPAY_SANDBOX', true),
+    'fedapay' => [
+        'public_key' => env('FEDAPAY_PUBLIC_KEY'),
+        'environment' => env('FEDAPAY_ENVIRONMENT', 'sandbox'),
     ],
 
 ];

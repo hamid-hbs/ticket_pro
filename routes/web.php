@@ -1,27 +1,48 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Models\Event;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\SuperAdminController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::redirect('/', '/login');
-Route::post('/buy', [TicketController::class, 'buy']);
+Route::get('/', function () {
+    $events = Event::query()
+        ->with('posters')
+        ->orderBy('date')
+        ->orderBy('start_time')
+        ->get();
+
+    return view('home', compact('events'));
+})->name('home');
+Route::get('/buy', [TicketController::class, 'index'])->name('buy');
+Route::post('/buy', [TicketController::class, 'buy'])->name('buy.store');
 Route::get('/pay/{id}', [TicketController::class, 'pay']);
 Route::post('/callback', [TicketController::class, 'callback'])->name('payment.callback');
 Route::get('/success/{id}', [TicketController::class, 'success']);
-Route::post('/sandbox/pay/{ticket}', [TicketController::class, 'sandboxPay'])->name('payment.sandbox.pay');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login']);
+
+    Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+    Route::post('/register', [RegisterController::class, 'register']);
 });
 
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
 
+Route::middleware('auth')->get('/mes-billets', [TicketController::class, 'mine'])->name('my.tickets');
+Route::middleware('auth')->get('/mes-billets/{ticket}/pdf', [TicketController::class, 'downloadPdf'])->name('my.tickets.pdf');
+
 Route::middleware('auth')->get('/dashboard', function () {
-    return redirect()->route('admin.dashboard');
+    $user = Auth::user();
+
+    return $user?->is_admin || $user?->is_superadmin
+        ? redirect()->route('admin.dashboard')
+    : redirect()->route('my.tickets');
 })->name('dashboard');
 
 Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->group(function () {

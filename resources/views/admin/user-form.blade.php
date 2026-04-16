@@ -1,7 +1,6 @@
 @extends('layouts.admin', ['title' => $user->exists ? 'Modifier un utilisateur' : 'Nouvel utilisateur'])
 
 @section('admin_content')
-    <p><a href="{{ route('admin.users') }}">← Retour à la liste</a></p>
     <h1>{{ $user->exists ? 'Modifier un utilisateur' : 'Nouvel utilisateur' }}</h1>
 
     @if ($errors->any())

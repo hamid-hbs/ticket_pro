@@ -16,6 +16,7 @@ class Ticket extends Model
         'used_at',
         'sold_by_user_id',
         'used_by_user_id',
+        'buyer_user_id',
         'email_sent_at',
     ];
 
@@ -40,5 +41,10 @@ class Ticket extends Model
     public function scannedBy()
     {
         return $this->belongsTo(User::class, 'used_by_user_id');
+    }
+
+    public function buyer()
+    {
+        return $this->belongsTo(User::class, 'buyer_user_id');
     }
 }

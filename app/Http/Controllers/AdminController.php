@@ -73,7 +73,9 @@ class AdminController extends Controller
 
     public function tickets(Request $request)
     {
-        $query = Ticket::with(['event', 'soldBy'])->orderByDesc('created_at');
+        $query = Ticket::with(['event', 'soldBy'])
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
         $allowedStatuses = ['paid', 'used'];
 
         $query->whereIn('status', $allowedStatuses);
@@ -98,7 +100,7 @@ class AdminController extends Controller
 
     public function showTicket(Ticket $ticket)
     {
-        $ticket->load(['event', 'soldBy', 'scannedBy']);
+        $ticket->load(['event', 'scannedBy']);
 
         return view('admin.ticket-show', compact('ticket'));
     }

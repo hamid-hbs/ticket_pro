@@ -18,6 +18,5 @@
             @endphp
             <p>{{ $ticket->event->title }} — {{ $eventDate }} à {{ $eventStartTime }}</p>
         @endif
-        <p style="margin-top:1.25rem; margin-bottom:0;"><a href="/">Retour à l’accueil</a></p>
     </div>
 @endsection

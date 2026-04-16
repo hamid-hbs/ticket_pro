@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Mail\TicketPurchasedMail;
 use App\Models\Event;
+use App\Models\EventPoster;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -18,7 +20,7 @@ class SuperAdminController extends Controller
 {
     public function events(Request $request)
     {
-        $query = Event::query()->orderBy('date')->orderBy('start_time')->orderBy('title');
+        $query = Event::query()->withCount('posters')->orderBy('date')->orderBy('start_time')->orderBy('title');
 
         if ($request->filled('q')) {
             $search = '%'.$request->string('q')->toString().'%';
@@ -49,7 +51,8 @@ class SuperAdminController extends Controller
     {
         $data = $this->validateEvent($request);
 
-        Event::create($data);
+        $event = Event::create($data);
+        $this->storePosters($event, $request);
 
         return redirect()
             ->route('admin.events')
@@ -59,7 +62,7 @@ class SuperAdminController extends Controller
     public function editEvent(Event $event)
     {
         return view('admin.event-form', [
-            'event' => $event,
+            'event' => $event->load('posters'),
             'action' => route('admin.events.update', $event),
             'method' => 'PUT',
             'buttonLabel' => 'Enregistrer les modifications',
@@ -72,6 +75,10 @@ class SuperAdminController extends Controller
 
         $event->update($data);
 
+        if ($request->hasFile('posters')) {
+            $this->storePosters($event, $request);
+        }
+
         return redirect()
             ->route('admin.events')
             ->with('status', 'Événement modifié.');
@@ -79,6 +86,11 @@ class SuperAdminController extends Controller
 
     public function destroyEvent(Event $event)
     {
+        foreach ($event->posters as $poster) {
+            Storage::disk('public')->delete($poster->path);
+        }
+
+        $event->posters()->delete();
         $event->delete();
 
         return redirect()
@@ -88,7 +100,9 @@ class SuperAdminController extends Controller
 
     public function users(Request $request)
     {
-        $query = User::query()->orderBy('name');
+        $query = User::query()
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
 
         if ($request->filled('q')) {
             $search = '%'.$request->string('q')->toString().'%';
@@ -320,10 +334,36 @@ class SuperAdminController extends Controller
             'date' => ['required', 'date'],
             'start_time' => ['required', 'date_format:H:i'],
             'location' => ['required', 'string', 'max:255'],
+            'posters' => ['nullable', 'array'],
+            'posters.*' => ['image', 'max:4096'],
         ]);
+
+        unset($data['posters']);
 
         return $data;
     }
+
+    private function storePosters(Event $event, Request $request): void
+    {
+        if (! $request->hasFile('posters')) {
+            return;
+        }
+
+        $startingOrder = (int) $event->posters()->max('sort_order');
+
+        foreach ($request->file('posters') as $index => $poster) {
+            if (! $poster) {
+                continue;
+            }
+
+            EventPoster::create([
+                'event_id' => $event->id,
+                'path' => $poster->store('event-posters', 'public'),
+                'sort_order' => $startingOrder + $index + 1,
+            ]);
+        }
+    }
+
 
     private function validateTicket(Request $request, ?Ticket $ticket = null): array
     {

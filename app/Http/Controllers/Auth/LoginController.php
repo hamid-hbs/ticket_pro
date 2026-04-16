@@ -31,16 +31,10 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
+        /** @var \App\Models\User|null $user */
         $user = Auth::user();
-        if (! $user || (! $user->is_admin && ! $user->is_superadmin)) {
-            Auth::logout();
 
-            throw ValidationException::withMessages([
-                'email' => __('Ce compte n\'a pas les droits administrateur.'),
-            ]);
-        }
-
-        return redirect()->intended(route('admin.dashboard'));
+        return redirect()->intended(route('dashboard'));
     }
 
     public function logout(Request $request)

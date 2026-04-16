@@ -1,7 +1,6 @@
 @extends('layouts.admin', ['title' => $ticket->exists ? 'Modifier un ticket' : 'Nouveau ticket'])
 
 @section('admin_content')
-    <p><a href="{{ route('admin.tickets') }}">← Retour à la liste</a></p>
     <h1>{{ $ticket->exists ? 'Modifier un ticket' : 'Nouveau ticket' }}</h1>
 
     @if ($errors->any())

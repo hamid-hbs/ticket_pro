@@ -15,13 +15,12 @@ Application Laravel de billetterie evenementielle avec back-office admin/superad
 
 ### Public / Paiement
 
-- `/` redirige vers `/login`.
+- `/` affiche la page d'accueil.
 - Les routes de paiement existent toujours:
 	- `POST /buy`
 	- `GET /pay/{id}`
 	- `POST /callback`
 	- `GET /success/{id}`
-	- `POST /sandbox/pay/{ticket}`
 
 ### Admin
 
@@ -190,8 +189,8 @@ DB:
 
 Paiement:
 
-- `KKIAPAY_PUBLIC_KEY`
-- `KKIAPAY_SANDBOX`
+- `FEDAPAY_PUBLIC_KEY`
+- `FEDAPAY_ENVIRONMENT`
 
 Email:
 

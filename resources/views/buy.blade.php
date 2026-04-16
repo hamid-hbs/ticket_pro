@@ -9,7 +9,9 @@
 
     <div class="card card--narrow">
         <h1>Acheter un billet</h1>
-        <form method="POST" action="/buy">
+        <p class="page-note">Choisissez l’événement et complétez vos informations. Le billet est envoyé par email après paiement.</p>
+
+        <form method="POST" action="{{ route('buy.store') }}">
             @csrf
             <div class="form-group">
                 <label for="event_id">Événement</label>
@@ -51,16 +53,13 @@
         @endif
             <div class="form-group">
                 <label for="name">Nom complet</label>
-                <input id="name" type="text" name="name" value="{{ old('name') }}" required>
+                <input id="name" type="text" name="name" value="{{ old('name', auth()->user()?->name) }}" required>
             </div>
             <div class="form-group">
                 <label for="email">Email <span style="font-size:0.85rem; color:#666;">(doit être réel, ex: Gmail)</span></label>
-                <input id="email" type="email" name="email" value="{{ old('email') }}" required>
+                <input id="email" type="email" name="email" value="{{ old('email', auth()->user()?->email) }}" required>
             </div>
             <button type="submit">Continuer vers le paiement</button>
         </form>
-        <!--<p class="page-note mt-large mb-0">
-            <a href="{{ route('login') }}">Espace administrateur</a>
-        </p>-->
     </div>
 @endsection

@@ -35,7 +35,10 @@ class TicketPurchasedMail extends Mailable
 
         $eventTitle = $this->ticket->event?->title ?? 'Événement';
 
-        $pdfBinary = Pdf::loadView('pdf.ticket', ['ticket' => $this->ticket])->output();
+        $pdfBinary = Pdf::loadView('pdf.ticket', [
+            'ticket' => $this->ticket,
+            'qrPngBase64' => base64_encode($qrPng),
+        ])->output();
 
         $qrAttachmentName = 'qr-billet-'.$this->ticket->id.'.png';
 

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Connexion — '.config('app.name'))
+@section('title', 'Créer un compte — '.config('app.name'))
 
 @section('content')
 <style>
@@ -40,15 +40,11 @@
 <div class="auth-wrap">
     <div class="auth-card">
         <div class="auth-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
         </div>
 
-        <h1>Connexion</h1>
-        <p class="auth-sub">Accédez à votre espace ou à l'administration.</p>
-
-        @if (session('status'))
-            <div class="flash-ok">{{ session('status') }}</div>
-        @endif
+        <h1>Créer un compte</h1>
+        <p class="auth-sub">Inscription gratuite pour accéder à votre espace.</p>
 
         @if ($errors->any())
             <div class="flash-err">
@@ -58,26 +54,30 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('login') }}">
+        <form method="POST" action="{{ route('register') }}">
             @csrf
             <div class="form-group">
+                <label for="name">Nom complet</label>
+                <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name">
+            </div>
+            <div class="form-group">
                 <label for="email">Email</label>
-                <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username">
+                <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email">
             </div>
             <div class="form-group">
                 <label for="password">Mot de passe</label>
-                <input id="password" type="password" name="password" required autocomplete="current-password">
+                <input id="password" type="password" name="password" required autocomplete="new-password">
             </div>
-            <label class="check-row cursor-pointer" style="margin-bottom:1.1rem;">
-                <input type="checkbox" name="remember" value="1" {{ old('remember') ? 'checked' : '' }}>
-                <span>Se souvenir de moi</span>
-            </label>
-            <button type="submit" class="btn">Se connecter</button>
+            <div class="form-group">
+                <label for="password_confirmation">Confirmer le mot de passe</label>
+                <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password">
+            </div>
+            <button type="submit" class="btn">S'inscrire</button>
         </form>
 
         <div class="auth-footer">
-            Pas encore de compte ?
-            <a href="{{ route('register') }}">Créer un compte</a>
+            Déjà inscrit ?
+            <a href="{{ route('login') }}">Se connecter</a>
         </div>
     </div>
 </div>
