@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\TicketPurchasedMail;
 use App\Models\Ticket;
+use App\Models\TicketPurchase;
 use App\Models\Event;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Endroid\QrCode\Builder\Builder;
@@ -40,15 +41,16 @@ class TicketController extends Controller
             ]
         );
 
-        $ticket = Ticket::create([
+        $purchase = TicketPurchase::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'event_id' => $validated['event_id'],
-            'qr_code' => (string) Str::uuid(),
-            'buyer_user_id' => $request->user()?->id,
+            'user_id' => $request->user()?->id,
+            'amount' => (int) Event::findOrFail($validated['event_id'])->price,
+            'status' => 'pending',
         ]);
 
-        return redirect('/pay/'.$ticket->id);
+        return redirect('/pay/'.$purchase->id);
     }
 
     public function mine(Request $request)
@@ -67,12 +69,11 @@ class TicketController extends Controller
         return view('tickets.mine', compact('tickets'));
     }
 
-    public function pay($id)
+    public function pay(TicketPurchase $purchase)
     {
-        $ticket = Ticket::findOrFail($id);
-        $event = $ticket->event;
+        $event = $purchase->event;
 
-        return view('pay', compact('ticket', 'event'));
+        return view('pay', compact('purchase', 'event'));
     }
 
     public function downloadPdf(Request $request, Ticket $ticket)
@@ -105,9 +106,13 @@ class TicketController extends Controller
     public function callback(Request $request)
     {
         $payload = $request->all();
-        $ticketId = data_get($payload, 'ticket_id')
+        $purchaseId = data_get($payload, 'purchase_id')
+            ?? data_get($payload, 'ticket_id')
+            ?? data_get($payload, 'data.purchase_id')
             ?? data_get($payload, 'data.ticket_id')
+            ?? data_get($payload, 'transaction.custom_metadata.purchase_id')
             ?? data_get($payload, 'transaction.custom_metadata.ticket_id')
+            ?? data_get($payload, 'custom_metadata.purchase_id')
             ?? data_get($payload, 'custom_metadata.ticket_id');
 
         $status = strtoupper((string) (data_get($payload, 'status')
@@ -120,26 +125,52 @@ class TicketController extends Controller
             ?? data_get($payload, 'data.transaction_id')
             ?? data_get($payload, 'id');
 
-        if (! $ticketId) {
+        if (! $purchaseId) {
             return response()->json(['message' => 'ticket_id manquant'], 422);
         }
 
-        $ticket = Ticket::find($ticketId);
+        $purchase = TicketPurchase::with('event')->find($purchaseId);
 
-        if (! $ticket) {
-            return response()->json(['message' => 'Ticket introuvable'], 404);
+        if (! $purchase) {
+            return response()->json(['message' => 'Achat introuvable'], 404);
         }
 
         if (in_array($status, ['SUCCESS', 'PAID', 'APPROVED', 'COMPLETED'], true) || $request->boolean('paid')) {
-            if ($ticket->status !== 'paid') {
-                $ticket->status = 'paid';
-                $ticket->payment_reference = $transactionId ?: 'fedapay_'.Str::uuid();
-                $ticket->save();
+            if ($purchase->status !== 'paid') {
+                $purchase->status = 'paid';
+                $purchase->payment_reference = $transactionId ?: 'fedapay_'.Str::uuid();
+                $purchase->save();
+
+                $ticket = $purchase->ticket;
+
+                if (! $ticket) {
+                    $ticket = Ticket::create([
+                        'name' => $purchase->name,
+                        'email' => $purchase->email,
+                        'event_id' => $purchase->event_id,
+                        'qr_code' => (string) Str::uuid(),
+                        'payment_reference' => $purchase->payment_reference,
+                        'status' => 'paid',
+                        'buyer_user_id' => $purchase->user_id,
+                    ]);
+
+                    $purchase->ticket_id = $ticket->id;
+                    $purchase->save();
+                }
+
                 $this->notifyPurchase($ticket->fresh());
+
+                return response()->json([
+                    'message' => 'OK',
+                    'ticket_id' => $ticket->id,
+                ]);
             }
         }
 
-        return response()->json(['message' => 'OK']);
+        return response()->json([
+            'message' => 'OK',
+            'ticket_id' => $purchase->ticket_id,
+        ]);
     }
 
     public function success($id)

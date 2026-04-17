@@ -20,7 +20,7 @@ Route::get('/', function () {
 })->name('home');
 Route::get('/buy', [TicketController::class, 'index'])->name('buy');
 Route::post('/buy', [TicketController::class, 'buy'])->name('buy.store');
-Route::get('/pay/{id}', [TicketController::class, 'pay']);
+Route::get('/pay/{purchase}', [TicketController::class, 'pay']);
 Route::post('/callback', [TicketController::class, 'callback'])->name('payment.callback');
 Route::get('/success/{id}', [TicketController::class, 'success']);
 
